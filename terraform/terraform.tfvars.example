@@ -1,0 +1,8 @@
+# AWS Region
+aws_region = "us-east-1"
+
+# OpenAI API Key (Secrets Managerに保存されます)
+openai_api_key = "your-openai-api-key-here"
+
+# Alexa Skill ID (Alexa Developer Consoleで取得)
+alexa_skill_id = "amzn1.ask.skill.xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 

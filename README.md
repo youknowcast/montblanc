@@ -9,7 +9,9 @@ Alexa platformと連携してOpenAIにクエリを投げ、回答を返却する
 ├── terraform/          # Terraformインフラストラクチャコード
 │   ├── main.tf        # メインリソース定義
 │   ├── variables.tf   # 変数定義
-│   └── outputs.tf     # 出力定義
+│   ├── outputs.tf     # 出力定義
+│   ├── terraform.tfvars.example  # 変数設定例
+│   └── .gitignore     # Terraform用除外設定
 ├── lambda/            # Lambda関数（TypeScript）
 │   ├── src/           # ソースコード
 │   ├── package.json   # 依存関係
@@ -24,6 +26,19 @@ Alexa platformと連携してOpenAIにクエリを投げ、回答を返却する
 - **Lambda Function**: OpenAI APIにクエリを送信して回答を取得
 - **Secrets Manager**: OpenAI APIキーを安全に管理
 - **IAM**: 最小権限でSecrets Managerアクセス
+
+## デプロイ戦略
+
+### Terraform（インフラ管理）
+- IAMロール・ポリシー
+- Secrets Manager
+- Lambda関数の基本設定（ダミー）
+- Alexa Skill Kit権限
+
+### Ramboll（アプリケーションデプロイ）
+- Lambda関数の実際のコードデプロイ
+- ビルド・パッケージング
+- 継続的デプロイ
 
 ## セットアップ
 
@@ -55,7 +70,32 @@ cd lambda
 npm run build
 ```
 
-### 4. Terraformでインフラをデプロイ
+### 4. Alexa Skill IDの取得
+
+Alexa Developer Consoleでスキルを作成し、スキルIDを取得：
+- スキルID形式: `amzn1.ask.skill.xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
+
+### 5. Terraform変数ファイルの設定
+
+```bash
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+```
+
+`terraform.tfvars`ファイルを編集して、実際の値を設定：
+
+```hcl
+# AWS Region
+aws_region = "us-east-1"
+
+# OpenAI API Key (Secrets Managerに保存されます)
+openai_api_key = "your-actual-openai-api-key"
+
+# Alexa Skill ID (Alexa Developer Consoleで取得)
+alexa_skill_id = "amzn1.ask.skill.xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+```
+
+### 6. Terraformでインフラをデプロイ
 
 ```bash
 cd terraform
@@ -64,7 +104,7 @@ terraform plan
 terraform apply
 ```
 
-### 5. RambollでLambda関数をデプロイ
+### 7. RambollでLambda関数をデプロイ
 
 ```bash
 cd lambda
@@ -86,6 +126,7 @@ OpenAI APIキーはAWS Secrets Managerで安全に管理されます：
 Lambda関数には以下の権限が付与されます：
 - Secrets Managerからのシークレット読み取り
 - CloudWatch Logsへのログ出力
+- 特定のAlexa Skillからの呼び出し許可
 
 ## 使用方法
 
@@ -119,4 +160,7 @@ npm test
 - AWSリージョンは必要に応じて変更してください
 - Alexaスキルの設定は別途必要です
 - Secrets Managerのシークレット名は`alexa-openai-api-key`です
-- Lambda関数のARNをAlexa Developer Consoleで設定してください 
+- Lambda関数のARNをAlexa Developer Consoleで設定してください
+- Alexa Skill IDはTerraformの変数として指定する必要があります
+- `terraform.tfvars`ファイルは機密情報を含むため、Gitにコミットされません
+- Terraformはインフラ管理、Rambollはアプリケーションデプロイを担当します 

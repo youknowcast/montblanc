@@ -66,9 +66,9 @@ resource "aws_iam_role_policy" "secrets_manager_policy" {
   })
 }
 
-# Lambda関数
+# ダミーのLambda関数（Rambollで実際のデプロイを行う）
 resource "aws_lambda_function" "montblanc" {
-  filename         = "../lambda/function.zip"
+  filename         = "dummy.zip"
   function_name    = "montblanc"
   role            = aws_iam_role.lambda_role.arn
   handler         = "index.handler"
@@ -81,4 +81,21 @@ resource "aws_lambda_function" "montblanc" {
       SECRET_NAME = aws_secretsmanager_secret.openai_api_key.name
     }
   }
+
+  # Rambollでデプロイされるため、Terraformでは更新しない
+  lifecycle {
+    ignore_changes = [
+      filename,
+      source_code_hash
+    ]
+  }
+}
+
+# Alexa Skill KitからのLambda関数呼び出し許可
+resource "aws_lambda_permission" "alexa_skill" {
+  statement_id  = "AllowExecutionFromAlexaSkill"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.montblanc.function_name
+  principal     = "alexa-appkit.amazon.com"
+  event_source_token = var.alexa_skill_id
 } 
