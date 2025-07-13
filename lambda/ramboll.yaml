@@ -1,0 +1,10 @@
+version: '1.0'
+
+functions:
+  montblanc:
+    handler: dist/index.handler
+    runtime: nodejs20.x
+    timeout: 30
+    memorySize: 256
+    environment:
+      SECRET_NAME: ${SECRET_NAME} 
