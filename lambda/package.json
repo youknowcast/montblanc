@@ -1,39 +1,40 @@
 {
-	"name": "montblanc",
-	"version": "1.0.0",
-	"description": "Montblanc - Alexa integration with OpenAI Lambda function",
-	"type": "module",
-	"main": "dist/index.js",
-	"engines": {
-		"node": ">=20.0.0"
-	},
-	"scripts": {
-		"build": "tsc && zip -r function.zip dist/* package.json node_modules",
-		"deploy": "npm run build && ramboll deploy",
-		"dev": "tsc --watch",
-		"test": "echo \"Error: no test specified\" && exit 1",
-		"lint": "biome lint .",
-		"format": "biome format . --write"
-	},
-	"dependencies": {
-		"@aws-sdk/client-secrets-manager": "^3.0.0",
-		"axios": "^1.6.0",
-		"openai": "^4.20.1"
-	},
-	"devDependencies": {
-		"@types/aws-lambda": "^8.10.0",
-		"@types/node": "^20.0.0",
-		"biome": "^0.3.3",
-		"typescript": "^5.0.0"
-	},
-	"keywords": [
-		"alexa",
-		"openai",
-		"lambda",
-		"aws",
-		"typescript",
-		"montblanc"
-	],
-	"author": "",
-	"license": "MIT"
+  "name": "montblanc",
+  "version": "1.0.0",
+  "description": "Montblanc - Alexa integration with OpenAI Lambda function",
+  "type": "module",
+  "main": "dist/index.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "tsc && zip -r function.zip dist/* package.json node_modules",
+    "deploy": "npm run build && ramboll deploy",
+    "dev": "tsc --watch",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "check": "biome check .",
+    "lint": "biome lint --write",
+    "format": "biome format --write"
+  },
+  "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.0.0",
+    "axios": "^1.6.0",
+    "openai": "^4.20.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.1.1",
+    "@types/aws-lambda": "^8.10.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "alexa",
+    "openai",
+    "lambda",
+    "aws",
+    "typescript",
+    "montblanc"
+  ],
+  "author": "",
+  "license": "MIT"
 }
