@@ -33,7 +33,7 @@ async function initializeOpenAI(): Promise<void> {
 	}
 }
 
-// Alexaスキルの応答形式
+// Alexaスキルの応答形式（ディスプレイ対応）
 interface AlexaResponse {
 	version: string;
 	response: {
@@ -41,6 +41,28 @@ interface AlexaResponse {
 			type: string;
 			text: string;
 		};
+		card?: {
+			type: string;
+			title: string;
+			content: string;
+		};
+		directives?: Array<{
+			type: string;
+			template: {
+				type: string;
+				title: string;
+				textContent: {
+					primaryText: {
+						type: string;
+						text: string;
+					};
+					secondaryText?: {
+						type: string;
+						text: string;
+					};
+				};
+			};
+		}>;
 		shouldEndSession: boolean;
 	};
 }
@@ -60,6 +82,15 @@ interface AlexaRequest {
 			applicationId: string;
 		};
 	};
+	context?: {
+		System?: {
+			device?: {
+				supportedInterfaces?: {
+					Display?: {};
+				};
+			};
+		};
+	};
 }
 
 export const handler = async (
@@ -74,9 +105,12 @@ export const handler = async (
 		// Alexaからのリクエストを解析
 		const alexaRequest: AlexaRequest = JSON.parse(event.body || '{}');
 
+		// ディスプレイ対応デバイスかどうかを判定
+		const hasDisplay = alexaRequest.context?.System?.device?.supportedInterfaces?.Display !== undefined;
+
 		// リクエストタイプを確認
 		if (alexaRequest.request.type === 'LaunchRequest') {
-			return createAlexaResponse('こんにちは！何かお手伝いできることはありますか？');
+			return createAlexaResponse('こんにちは！何かお手伝いできることはありますか？', false, hasDisplay);
 		}
 
 		if (alexaRequest.request.type === 'IntentRequest') {
@@ -92,32 +126,32 @@ export const handler = async (
 					messages: [
 						{
 							role: 'system',
-							content: 'あなたは親切で役立つアシスタントです。日本語で回答してください。'
+							content: 'あなたは親切で役立つアシスタントです。日本語で回答してください。回答は300字程度にまとめてください。音声で聞き取りやすいように、簡潔で分かりやすい表現を使用してください。'
 						},
 						{
 							role: 'user',
 							content: question
 						}
 					],
-					max_tokens: 500,
+					max_tokens: 300,
 					temperature: 0.7,
 				});
 
 				const answer = completion.choices[0]?.message?.content || '申し訳ございませんが、回答を生成できませんでした。';
 
-				return createAlexaResponse(answer);
+				return createAlexaResponse(answer, false, hasDisplay, question);
 			}
 
 			if (intentName === 'AMAZON.HelpIntent') {
-				return createAlexaResponse('何か質問があれば、お気軽にお聞きください。');
+				return createAlexaResponse('何か質問があれば、お気軽にお聞きください。', false, hasDisplay);
 			}
 
 			if (intentName === 'AMAZON.StopIntent' || intentName === 'AMAZON.CancelIntent') {
-				return createAlexaResponse('お疲れさまでした。またお会いしましょう。', true);
+				return createAlexaResponse('お疲れさまでした。またお会いしましょう。', true, hasDisplay);
 			}
 		}
 
-		return createAlexaResponse('申し訳ございませんが、理解できませんでした。もう一度お試しください。');
+		return createAlexaResponse('申し訳ございませんが、理解できませんでした。もう一度お試しください。', false, hasDisplay);
 
 	} catch (error) {
 		console.error('Error:', error);
@@ -135,7 +169,9 @@ export const handler = async (
 
 function createAlexaResponse(
 	speechText: string,
-	shouldEndSession: boolean = false
+	shouldEndSession: boolean = false,
+	hasDisplay: boolean = false,
+	question?: string
 ): APIGatewayProxyResult {
 	const response: AlexaResponse = {
 		version: '1.0',
@@ -147,6 +183,56 @@ function createAlexaResponse(
 			shouldEndSession: shouldEndSession
 		}
 	};
+
+	// ディスプレイ対応デバイスの場合、ディスプレイ表示を追加
+	if (hasDisplay) {
+		if (question) {
+			// OpenAIの回答の場合
+			response.response.directives = [
+				{
+					type: 'Display',
+					template: {
+						type: 'BodyTemplate1',
+						title: 'Montblanc - AI Assistant',
+						textContent: {
+							primaryText: {
+								type: 'RichText',
+								text: `<speak><break time="1s"/><prosody rate="slow">${question}</prosody></speak>`
+							},
+							secondaryText: {
+								type: 'RichText',
+								text: speechText
+							}
+						}
+					}
+				}
+			];
+		} else {
+			// 通常の応答の場合
+			response.response.directives = [
+				{
+					type: 'Display',
+					template: {
+						type: 'BodyTemplate1',
+						title: 'Montblanc - AI Assistant',
+						textContent: {
+							primaryText: {
+								type: 'RichText',
+								text: speechText
+							}
+						}
+					}
+				}
+			];
+		}
+	} else {
+		// ディスプレイ非対応デバイスの場合、カードを表示
+		response.response.card = {
+			type: 'Simple',
+			title: 'Montblanc - AI Assistant',
+			content: speechText
+		};
+	}
 
 	return {
 		statusCode: 200,
