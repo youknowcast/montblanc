@@ -100,8 +100,7 @@ export const handler = async (event: AlexaRequest): Promise<AlexaResponse> => {
     await initializeOpenAI();
 
     // ディスプレイ対応デバイスかどうかを判定
-    const hasDisplay =
-      event.context?.System?.device?.supportedInterfaces?.Display !== undefined;
+    const hasDisplay = event.context?.System?.device?.supportedInterfaces?.Display !== undefined;
 
     // リクエストタイプを確認
     if (event.request.type === "LaunchRequest") {
@@ -146,11 +145,15 @@ export const handler = async (event: AlexaRequest): Promise<AlexaResponse> => {
 
       if (intentName === "TranslateToEnglishIntent") {
         const phrase = event.request.intent?.slots?.question?.value || "";
-      
+
         if (!phrase) {
-          return createAlexaResponse("翻訳する言葉が聞き取れませんでした。もう一度お願いします。", false, hasDisplay);
+          return createAlexaResponse(
+            "翻訳する言葉が聞き取れませんでした。もう一度お願いします。",
+            false,
+            hasDisplay,
+          );
         }
-      
+
         const completion = await openai.chat.completions.create({
           model: "gpt-3.5-turbo",
           messages: [
@@ -172,11 +175,11 @@ export const handler = async (event: AlexaRequest): Promise<AlexaResponse> => {
           max_tokens: 60,
           temperature: 0.2,
         });
-      
+
         const english =
           completion.choices[0]?.message?.content?.trim() ||
           "申し訳ありませんが、翻訳できませんでした。";
-      
+
         return createAlexaResponse(`${english}`, false, hasDisplay, phrase);
       }
 
