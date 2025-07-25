@@ -1,0 +1,16 @@
+{
+  "FunctionName": "montblanc",
+  "Runtime": "nodejs20.x",
+  "Handler": "dist/index.handler",
+  "Timeout": 30,
+  "MemorySize": 256,
+  "Environment": {
+    "Variables": {
+      "SECRET_NAME": "alexa-openai-api-key"
+    }
+  },
+  "Tags": {
+    "Project": "montblanc",
+    "Environment": "production"
+  }
+} 

@@ -1,4 +1,3 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import OpenAI from "openai";
 import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
 
@@ -93,22 +92,19 @@ interface AlexaRequest {
   };
 }
 
-export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+export const handler = async (event: AlexaRequest): Promise<AlexaResponse> => {
   try {
     console.log("Received event:", JSON.stringify(event, null, 2));
 
     // OpenAIクライアントを初期化
     await initializeOpenAI();
 
-    // Alexaからのリクエストを解析
-    const alexaRequest: AlexaRequest = JSON.parse(event.body || "{}");
-
     // ディスプレイ対応デバイスかどうかを判定
     const hasDisplay =
-      alexaRequest.context?.System?.device?.supportedInterfaces?.Display !== undefined;
+      event.context?.System?.device?.supportedInterfaces?.Display !== undefined;
 
     // リクエストタイプを確認
-    if (alexaRequest.request.type === "LaunchRequest") {
+    if (event.request.type === "LaunchRequest") {
       return createAlexaResponse(
         "こんにちは！何かお手伝いできることはありますか？",
         false,
@@ -116,12 +112,12 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       );
     }
 
-    if (alexaRequest.request.type === "IntentRequest") {
-      const intentName = alexaRequest.request.intent?.name;
+    if (event.request.type === "IntentRequest") {
+      const intentName = event.request.intent?.name;
 
-      if (intentName === "AskOpenAI") {
+      if (intentName === "AskAIIntent") {
         // ユーザーの質問を取得
-        const question = alexaRequest.request.intent?.slots?.question?.value || "こんにちは";
+        const question = event.request.intent?.slots?.question?.value || "こんにちは";
 
         // OpenAIに質問を送信
         const completion = await openai.chat.completions.create({
@@ -130,7 +126,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             {
               role: "system",
               content:
-                "あなたは親切で役立つアシスタントです。日本語で回答してください。回答は300字程度にまとめてください。音声で聞き取りやすいように、簡潔で分かりやすい表現を使用してください。",
+                "あなたは親切で役立つアシスタントです。日本語で回答してください。回答は400字程度にまとめてください。音声で聞き取りやすいように、簡潔で分かりやすい表現を使用してください。",
             },
             {
               role: "user",
@@ -164,15 +160,11 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     );
   } catch (error) {
     console.error("Error:", error);
-    return {
-      statusCode: 500,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        error: "Internal server error",
-      }),
-    };
+    return createAlexaResponse(
+      "申し訳ございませんが、エラーが発生しました。もう一度お試しください。",
+      true,
+      false,
+    );
   }
 };
 
@@ -181,7 +173,7 @@ function createAlexaResponse(
   shouldEndSession: boolean = false,
   hasDisplay: boolean = false,
   question?: string,
-): APIGatewayProxyResult {
+): AlexaResponse {
   const response: AlexaResponse = {
     version: "1.0",
     response: {
@@ -243,11 +235,5 @@ function createAlexaResponse(
     };
   }
 
-  return {
-    statusCode: 200,
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(response),
-  };
+  return response;
 }

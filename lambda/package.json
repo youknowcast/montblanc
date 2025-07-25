@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "tsc && zip -r function.zip dist/* package.json node_modules",
-    "deploy": "npm run build && ramboll deploy",
+    "deploy": "npm run build && lambroll deploy",
     "dev": "tsc --watch",
     "test": "echo \"Error: no test specified\" && exit 1",
     "check": "biome check .",
@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.1",
-    "@types/aws-lambda": "^8.10.0",
+
     "@types/node": "^20.0.0",
     "typescript": "^5.0.0"
   },
