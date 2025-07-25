@@ -1,4 +1,4 @@
-# Alexa OpenAI Integration
+# Montblanc - Alexa OpenAI Integration
 
 Alexa platformと連携してOpenAIにクエリを投げ、回答を返却するアプリケーションです。
 
@@ -14,9 +14,11 @@ Alexa platformと連携してOpenAIにクエリを投げ、回答を返却する
 │   └── .gitignore     # Terraform用除外設定
 ├── lambda/            # Lambda関数（TypeScript）
 │   ├── src/           # ソースコード
+│   ├── dist/          # ビルド出力
 │   ├── package.json   # 依存関係
 │   ├── tsconfig.json  # TypeScript設定
-│   └── ramboll.yaml   # Ramboll設定
+│   ├── function.json  # Lambda関数設定
+│   └── biome.jsonc    # Biome設定
 └── README.md          # このファイル
 ```
 
@@ -35,7 +37,7 @@ Alexa platformと連携してOpenAIにクエリを投げ、回答を返却する
 - Lambda関数の基本設定（ダミー）
 - Alexa Skill Kit権限
 
-### Ramboll（アプリケーションデプロイ）
+### Lambroll（アプリケーションデプロイ）
 - Lambda関数の実際のコードデプロイ
 - ビルド・パッケージング
 - 継続的デプロイ
@@ -47,7 +49,7 @@ Alexa platformと連携してOpenAIにクエリを投げ、回答を返却する
 - Node.js 20以上
 - Terraform
 - AWS CLI
-- Ramboll CLI
+- Lambroll CLI
 
 ### 1. 依存関係のインストール
 
@@ -104,7 +106,7 @@ terraform plan
 terraform apply
 ```
 
-### 7. RambollでLambda関数をデプロイ
+### 7. LambrollでLambda関数をデプロイ
 
 ```bash
 cd lambda
@@ -134,7 +136,8 @@ Lambda関数には以下の権限が付与されます：
 2. エンドポイントタイプを「AWS Lambda ARN」に設定
 3. Lambda関数のARNを設定（Terraformの出力から取得）
 4. インテントを設定：
-   - `AskOpenAI`: ユーザーの質問をOpenAIに送信
+   - `AskAIIntent`: ユーザーの質問をOpenAIに送信
+   - `TranslateToEnglishIntent`: 日本語を英語に翻訳
    - `AMAZON.HelpIntent`: ヘルプメッセージ
    - `AMAZON.StopIntent`: セッション終了
 
@@ -163,4 +166,4 @@ npm test
 - Lambda関数のARNをAlexa Developer Consoleで設定してください
 - Alexa Skill IDはTerraformの変数として指定する必要があります
 - `terraform.tfvars`ファイルは機密情報を含むため、Gitにコミットされません
-- Terraformはインフラ管理、Rambollはアプリケーションデプロイを担当します 
+- Terraformはインフラ管理、Lambrollはアプリケーションデプロイを担当します 
