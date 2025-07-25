@@ -133,7 +133,7 @@ export const handler = async (event: AlexaRequest): Promise<AlexaResponse> => {
               content: question,
             },
           ],
-          max_tokens: 300,
+          max_tokens: 400,
           temperature: 0.7,
         });
 
@@ -142,6 +142,42 @@ export const handler = async (event: AlexaRequest): Promise<AlexaResponse> => {
           "申し訳ございませんが、回答を生成できませんでした。";
 
         return createAlexaResponse(answer, false, hasDisplay, question);
+      }
+
+      if (intentName === "TranslateToEnglishIntent") {
+        const phrase = event.request.intent?.slots?.question?.value || "";
+      
+        if (!phrase) {
+          return createAlexaResponse("翻訳する言葉が聞き取れませんでした。もう一度お願いします。", false, hasDisplay);
+        }
+      
+        const completion = await openai.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          messages: [
+            {
+              role: "system",
+              content: [
+                "あなたはプロの翻訳者です。",
+                "ユーザーが入力した日本語の単語または短いフレーズを、英語で自然な形に翻訳してください。",
+                "出力は**英単語または英語の短文のみ**にしてください。",
+                "「〜は英語で〜です」のような説明は不要です。",
+                "回答は1行だけ、簡潔に。",
+              ].join(" "),
+            },
+            {
+              role: "user",
+              content: `「${phrase}」は英語で？`,
+            },
+          ],
+          max_tokens: 60,
+          temperature: 0.2,
+        });
+      
+        const english =
+          completion.choices[0]?.message?.content?.trim() ||
+          "申し訳ありませんが、翻訳できませんでした。";
+      
+        return createAlexaResponse(`${english}`, false, hasDisplay, phrase);
       }
 
       if (intentName === "AMAZON.HelpIntent") {
