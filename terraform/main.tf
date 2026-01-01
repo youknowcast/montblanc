@@ -71,8 +71,8 @@ resource "aws_lambda_function" "montblanc" {
   filename         = "dummy.zip"
   function_name    = "montblanc"
   role            = aws_iam_role.lambda_role.arn
-  handler         = "index.handler"
-  runtime         = "nodejs20.x"
+  handler         = "dist/index.handler"
+  runtime         = "nodejs22.x"
   timeout         = 30
   memory_size     = 256
 
@@ -80,6 +80,11 @@ resource "aws_lambda_function" "montblanc" {
     variables = {
       SECRET_NAME = aws_secretsmanager_secret.openai_api_key.name
     }
+  }
+
+  tags = {
+    Project     = "montblanc"
+    Environment = "production"
   }
 
   # Rambollでデプロイされるため、Terraformでは更新しない
@@ -98,4 +103,4 @@ resource "aws_lambda_permission" "alexa_skill" {
   function_name = aws_lambda_function.montblanc.function_name
   principal     = "alexa-appkit.amazon.com"
   event_source_token = var.alexa_skill_id
-} 
+}
